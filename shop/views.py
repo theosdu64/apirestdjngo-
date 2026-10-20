@@ -1,10 +1,12 @@
-from rest_framework.viewsets import ReadOnlyModelViewSet
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from shop.models import Category, Product, Article
 from shop.serializers import (
     CategoryListSerializer, CategoryDetailSerializer,
     ProductListSerializer, ProductDetailSerializer,
-    ArticleSerializer,
+    ArticleSerializer, ArticleAdminSerializer, CategoryAdminSerializer,
 )
 
 
@@ -38,6 +40,11 @@ class CategoryViewSet(ActiveFilterMixin, DetailSerializerMixin, ReadOnlyModelVie
     serializer_class = CategoryListSerializer
     detail_serializer_class = CategoryDetailSerializer
 
+    @action(detail=True, methods=['post'])
+    def disable(self, request, pk):
+        self.get_object().disable()
+        return Response()
+
 
 class ProductViewSet(ActiveFilterMixin, DetailSerializerMixin, ReadOnlyModelViewSet):
 
@@ -47,6 +54,11 @@ class ProductViewSet(ActiveFilterMixin, DetailSerializerMixin, ReadOnlyModelView
     filter_param = 'category_id'
     filter_field = 'category_id'
 
+    @action(detail=True, methods=['post'])
+    def disable(self, request, pk):
+        self.get_object().disable()
+        return Response()
+
 
 class ArticleViewSet(ActiveFilterMixin, ReadOnlyModelViewSet):
 
@@ -54,3 +66,15 @@ class ArticleViewSet(ActiveFilterMixin, ReadOnlyModelViewSet):
     serializer_class = ArticleSerializer
     filter_param = 'product_id'
     filter_field = 'product_id'
+
+
+class AdminCategoryViewSet(ModelViewSet):
+
+    queryset = Category.objects.order_by('id')
+    serializer_class = CategoryAdminSerializer
+
+
+class AdminArticleViewSet(ModelViewSet):
+
+    queryset = Article.objects.order_by('id')
+    serializer_class = ArticleAdminSerializer
