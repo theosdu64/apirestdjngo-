@@ -1,7 +1,11 @@
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from shop.models import Category, Product, Article
-from shop.serializers import CategorySerializer, ProductSerializer, ArticleSerializer
+from shop.serializers import (
+    CategoryListSerializer, CategoryDetailSerializer,
+    ProductListSerializer, ProductDetailSerializer,
+    ArticleSerializer,
+)
 
 
 class ActiveFilterMixin:
@@ -18,16 +22,28 @@ class ActiveFilterMixin:
         return queryset
 
 
-class CategoryViewSet(ActiveFilterMixin, ReadOnlyModelViewSet):
+class DetailSerializerMixin:
+
+    detail_serializer_class = None
+
+    def get_serializer_class(self):
+        if self.action == 'retrieve' and self.detail_serializer_class:
+            return self.detail_serializer_class
+        return super().get_serializer_class()
+
+
+class CategoryViewSet(ActiveFilterMixin, DetailSerializerMixin, ReadOnlyModelViewSet):
 
     queryset = Category.objects.order_by('id')
-    serializer_class = CategorySerializer
+    serializer_class = CategoryListSerializer
+    detail_serializer_class = CategoryDetailSerializer
 
 
-class ProductViewSet(ActiveFilterMixin, ReadOnlyModelViewSet):
+class ProductViewSet(ActiveFilterMixin, DetailSerializerMixin, ReadOnlyModelViewSet):
 
     queryset = Product.objects.order_by('id')
-    serializer_class = ProductSerializer
+    serializer_class = ProductListSerializer
+    detail_serializer_class = ProductDetailSerializer
     filter_param = 'category_id'
     filter_field = 'category_id'
 
