@@ -19,7 +19,7 @@ class ShopTestCase(APITestCase):
     def get_ids(self, url):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        return [item['id'] for item in response.json()]
+        return [item['id'] for item in response.json()['results']]
 
 
 class CategoryTests(ShopTestCase):

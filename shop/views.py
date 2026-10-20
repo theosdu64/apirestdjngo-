@@ -20,13 +20,13 @@ class ActiveFilterMixin:
 
 class CategoryViewSet(ActiveFilterMixin, ReadOnlyModelViewSet):
 
-    queryset = Category.objects.all()
+    queryset = Category.objects.order_by('id')
     serializer_class = CategorySerializer
 
 
 class ProductViewSet(ActiveFilterMixin, ReadOnlyModelViewSet):
 
-    queryset = Product.objects.all()
+    queryset = Product.objects.order_by('id')
     serializer_class = ProductSerializer
     filter_param = 'category_id'
     filter_field = 'category_id'
@@ -34,7 +34,7 @@ class ProductViewSet(ActiveFilterMixin, ReadOnlyModelViewSet):
 
 class ArticleViewSet(ActiveFilterMixin, ReadOnlyModelViewSet):
 
-    queryset = Article.objects.all()
+    queryset = Article.objects.order_by('id')
     serializer_class = ArticleSerializer
     filter_param = 'product_id'
     filter_field = 'product_id'
