@@ -1,4 +1,8 @@
+import requests
 from django.db import models, transaction
+
+OPEN_FOOD_FACTS_URL = 'https://world.openfoodfacts.org/api/v2/product/3274080005003.json'
+OPEN_FOOD_FACTS_TIMEOUT = 5
 
 
 class Category(models.Model):
@@ -44,6 +48,24 @@ class Product(models.Model):
         self.active = False
         self.save()
         self.articles.update(active=False)
+
+    def call_external_api(self):
+        return requests.get(
+            OPEN_FOOD_FACTS_URL,
+            params={'fields': 'ecoscore_grade'},
+            headers={'User-Agent': 'apiRestDjango-exercice'},
+            timeout=OPEN_FOOD_FACTS_TIMEOUT,
+        )
+
+    @property
+    def ecoscore(self):
+        try:
+            response = self.call_external_api()
+        except requests.RequestException:
+            return None
+        if response.status_code != 200:
+            return None
+        return response.json().get('product', {}).get('ecoscore_grade')
 
 
 class Article(models.Model):

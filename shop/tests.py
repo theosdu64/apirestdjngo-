@@ -1,6 +1,9 @@
+from unittest import mock
+
 from django.urls import reverse
 from rest_framework.test import APITestCase
 
+from shop.mocks import ECOSCORE_GRADE, mock_openfoodfact_failure, mock_openfoodfact_success
 from shop.models import Category, Product
 
 
@@ -43,3 +46,15 @@ class ProductTests(ShopTestCase):
     def test_filter_by_category(self):
         ids = self.get_ids(reverse('product-list') + f'?category_id={self.legumes.id}')
         self.assertEqual(ids, [self.tomate.id])
+
+    @mock.patch('shop.models.Product.call_external_api', mock_openfoodfact_success)
+    def test_detail_contains_ecoscore(self):
+        response = self.client.get(reverse('product-detail', args=[self.ananas.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['ecoscore'], ECOSCORE_GRADE)
+
+    @mock.patch('shop.models.Product.call_external_api', mock_openfoodfact_failure)
+    def test_detail_ecoscore_is_none_when_external_api_fails(self):
+        response = self.client.get(reverse('product-detail', args=[self.ananas.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(response.json()['ecoscore'])

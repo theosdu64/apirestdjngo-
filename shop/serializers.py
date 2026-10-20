@@ -40,7 +40,7 @@ class ProductDetailSerializer(ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'description', 'category', 'articles']
+        fields = ['id', 'name', 'description', 'category', 'ecoscore', 'articles']
 
     def get_articles(self, instance):
         active_articles = instance.articles.filter(active=True)
