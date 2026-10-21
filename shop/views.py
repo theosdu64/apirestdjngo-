@@ -10,35 +10,17 @@ from shop.serializers import (
 )
 
 
-class ActiveFilterMixin:
+class CategoryViewSet(ReadOnlyModelViewSet):
 
-    filter_param = None
-    filter_field = None
+    serializer_class = CategoryListSerializer
 
     def get_queryset(self):
-        queryset = super().get_queryset().filter(active=True)
-        if self.filter_param:
-            value = self.request.query_params.get(self.filter_param)
-            if value is not None:
-                queryset = queryset.filter(**{self.filter_field: value})
-        return queryset
-
-
-class DetailSerializerMixin:
-
-    detail_serializer_class = None
+        return Category.objects.filter(active=True).order_by('id')
 
     def get_serializer_class(self):
-        if self.action == 'retrieve' and self.detail_serializer_class:
-            return self.detail_serializer_class
-        return super().get_serializer_class()
-
-
-class CategoryViewSet(ActiveFilterMixin, DetailSerializerMixin, ReadOnlyModelViewSet):
-
-    queryset = Category.objects.order_by('id')
-    serializer_class = CategoryListSerializer
-    detail_serializer_class = CategoryDetailSerializer
+        if self.action == 'retrieve':
+            return CategoryDetailSerializer
+        return CategoryListSerializer
 
     @action(detail=True, methods=['post'])
     def disable(self, request, pk):
@@ -46,13 +28,21 @@ class CategoryViewSet(ActiveFilterMixin, DetailSerializerMixin, ReadOnlyModelVie
         return Response()
 
 
-class ProductViewSet(ActiveFilterMixin, DetailSerializerMixin, ReadOnlyModelViewSet):
+class ProductViewSet(ReadOnlyModelViewSet):
 
-    queryset = Product.objects.order_by('id')
     serializer_class = ProductListSerializer
-    detail_serializer_class = ProductDetailSerializer
-    filter_param = 'category_id'
-    filter_field = 'category_id'
+
+    def get_queryset(self):
+        queryset = Product.objects.filter(active=True).order_by('id')
+        category_id = self.request.GET.get('category_id')
+        if category_id:
+            queryset = queryset.filter(category_id=category_id)
+        return queryset
+
+    def get_serializer_class(self):
+        if self.action == 'retrieve':
+            return ProductDetailSerializer
+        return ProductListSerializer
 
     @action(detail=True, methods=['post'])
     def disable(self, request, pk):
@@ -60,21 +50,29 @@ class ProductViewSet(ActiveFilterMixin, DetailSerializerMixin, ReadOnlyModelView
         return Response()
 
 
-class ArticleViewSet(ActiveFilterMixin, ReadOnlyModelViewSet):
+class ArticleViewSet(ReadOnlyModelViewSet):
 
-    queryset = Article.objects.order_by('id')
     serializer_class = ArticleSerializer
-    filter_param = 'product_id'
-    filter_field = 'product_id'
+
+    def get_queryset(self):
+        queryset = Article.objects.filter(active=True).order_by('id')
+        product_id = self.request.GET.get('product_id')
+        if product_id:
+            queryset = queryset.filter(product_id=product_id)
+        return queryset
 
 
 class AdminCategoryViewSet(ModelViewSet):
 
-    queryset = Category.objects.order_by('id')
     serializer_class = CategoryAdminSerializer
+
+    def get_queryset(self):
+        return Category.objects.order_by('id')
 
 
 class AdminArticleViewSet(ModelViewSet):
 
-    queryset = Article.objects.order_by('id')
     serializer_class = ArticleAdminSerializer
+
+    def get_queryset(self):
+        return Article.objects.order_by('id')
